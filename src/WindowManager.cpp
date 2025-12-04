@@ -255,6 +255,14 @@ void WindowManager::tryOpenWallet(const QString &path, const QString &password) 
         absolutePath.replace(0, 1, QDir::homePath());
     }
 
+    // Canonicalize path to prevent path traversal attacks
+    QFileInfo fileInfo(absolutePath);
+    absolutePath = fileInfo.canonicalFilePath();
+    if (absolutePath.isEmpty()) {
+        // canonicalFilePath returns empty if file doesn't exist, fall back to absoluteFilePath
+        absolutePath = fileInfo.absoluteFilePath();
+    }
+
     // If the wallet is already open, just bring window to front
     for (const auto &window : m_windows) {
         if (absolutePath == window->walletKeysPath() || absolutePath == window->walletCachePath()) {
@@ -761,7 +769,20 @@ void WindowManager::initSkins() {
     if (!breeze_light.isEmpty())
         m_skins.insert("Breeze/Light", breeze_light);
 
+    // Omarchy: Load from ~/.config/omarchy/current/theme/feather.qss if it exists,
+    // otherwise fall back to embedded stylesheet
+    QString omarchyPath = QDir::homePath() + "/.config/omarchy/current/theme/feather.qss";
+    QString omarchy = this->loadStylesheet(omarchyPath);
+    if (omarchy.isEmpty()) {
+        omarchy = this->loadStylesheet(":/omarchy.qss");
+    }
+    if (!omarchy.isEmpty())
+        m_skins.insert("Omarchy", omarchy);
+
     QString skin = conf()->get(Config::skin).toString();
+    // Default to Omarchy theme if no skin is set
+    if (skin.isEmpty() || !m_skins.contains(skin))
+        skin = "Omarchy";
     qApp->setStyleSheet(m_skins[skin]);
 }
 

@@ -32,7 +32,7 @@ private:
     QScopedPointer<Ui::URWidget> ui;
     QTimer m_timer;
     ur::UREncoder *m_urencoder = nullptr;
-    QrCode *m_code = nullptr;
+    QScopedPointer<QrCode> m_code;
     QList<std::string> allParts;
     qsizetype currentIndex = 0;
     

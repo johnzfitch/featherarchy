@@ -234,7 +234,10 @@ void CoinsModel::setSelected(const QStringList &keyimages) {
     for (const auto &ki : keyimages) {
         m_selected.insert(ki);
     }
-    emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+    // Avoid emitting invalid indices when model is empty
+    if (rowCount() > 0) {
+        emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+    }
 }
 
 const CoinsInfo& CoinsModel::entryFromIndex(const QModelIndex &index) const {

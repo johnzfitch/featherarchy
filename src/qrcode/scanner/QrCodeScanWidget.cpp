@@ -113,7 +113,9 @@ void QrCodeScanWidget::reset() {
 }
 
 void QrCodeScanWidget::stop() {
-    m_camera->stop();
+    if (m_camera) {
+        m_camera->stop();
+    }
     m_thread->stop();
 }
 
@@ -178,6 +180,14 @@ void QrCodeScanWidget::onCameraSwitched(int index) {
     ui->frame_error->setVisible(false);
 
     m_camera.reset(new QCamera(cameras.at(index), this));
+
+    if (!m_camera) {
+        qWarning() << "Failed to create camera for device:" << cameras.at(index).description();
+        ui->frame_error->setText("Failed to initialize camera");
+        ui->frame_error->setVisible(true);
+        return;
+    }
+
     m_captureSession.setCamera(m_camera.data());
     m_captureSession.setVideoOutput(ui->viewfinder);
 

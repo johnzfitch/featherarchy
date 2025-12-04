@@ -20,6 +20,7 @@ public:
     explicit PageSetPassword(WizardFields *fields, QWidget *parent = nullptr);
     void initializePage() override;
     bool validatePage() override;
+    void cleanupPage() override;
     int nextId() const override;
     bool isComplete() const override;
 

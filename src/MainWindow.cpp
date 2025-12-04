@@ -420,6 +420,13 @@ void MainWindow::initMenu() {
     ui->actionUpdate_balance->setShortcut(QKeySequence("Ctrl+U"));
     ui->actionShow_Searchbar->setShortcut(QKeySequence("Ctrl+F"));
     ui->actionDocumentation->setShortcut(QKeySequence("F1"));
+
+    // Add feather icon to top right corner of menu bar
+    QLabel *featherIcon = new QLabel(this);
+    QPixmap featherPixmap(":/assets/images/feather.png");
+    featherIcon->setPixmap(featherPixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    featherIcon->setContentsMargins(0, 0, 10, 0);
+    this->menuBar()->setCornerWidget(featherIcon, Qt::TopRightCorner);
 }
 
 void MainWindow::initOffline() {
@@ -1809,13 +1816,18 @@ bool MainWindow::verifyPassword(bool sensitive) {
         PasswordDialog passwordDialog{this->walletName(), incorrectPassword, sensitive, this};
         int ret = passwordDialog.exec();
         if (ret == QDialog::Rejected) {
+            passwordDialog.secureWipePassword();
             return false;
         }
 
         if (!m_wallet->verifyPassword(passwordDialog.password)) {
             incorrectPassword = true;
+            passwordDialog.secureWipePassword();
             continue;
         }
+
+        // Password verified successfully - wipe it from dialog memory
+        passwordDialog.secureWipePassword();
         break;
     }
     return true;

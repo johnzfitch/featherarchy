@@ -29,8 +29,23 @@ bool PasswordSetWidget::passwordsMatch() {
 }
 
 void PasswordSetWidget::resetFields() {
+    this->secureWipe();
     ui->line_password->setText("");
     ui->line_confirmPassword->setText("");
+}
+
+void PasswordSetWidget::secureWipe() {
+    // Securely wipe password fields by overwriting memory before clearing
+    if (ui->line_password) {
+        QString text = ui->line_password->text();
+        text.fill('0');
+        ui->line_password->clear();
+    }
+    if (ui->line_confirmPassword) {
+        QString text = ui->line_confirmPassword->text();
+        text.fill('0');
+        ui->line_confirmPassword->clear();
+    }
 }
 
 void PasswordSetWidget::onPasswordEntryChanged() {

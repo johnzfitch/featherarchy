@@ -71,17 +71,6 @@ OfflineTxSigningWizard::OfflineTxSigningWizard(QWidget *parent, Wallet *wallet, 
         this->resize(availableHeight, availableHeight);
     }
 
-    // Anti-glare
-    // QFile f(":qdarkstyle/style.qss");
-    // if (!f.exists()) {
-    //     printf("Unable to set stylesheet, file not found\n");
-    //     f.close();
-    // } else {
-    //     f.open(QFile::ReadOnly | QFile::Text);
-    //     QTextStream ts(&f);
-    //     QString qdarkstyle = ts.readAll();
-    //     this->setStyleSheet(qdarkstyle);
-    // }
 }
 
 bool OfflineTxSigningWizard::readyToCommit() {

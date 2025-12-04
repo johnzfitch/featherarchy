@@ -46,16 +46,37 @@ struct WizardFields {
     QString subaddressLookahead;
 
     void clearFields() {
+        // Clear all wizard state including sensitive data
+        walletName.clear();
+        walletDir.clear();
+
+        // Securely clear seed data (contains mnemonic and keys)
+        seed = Seed();
+
+        // Clear boolean flags
         showSetSeedPassphrasePage = false;
         showSetRestoreHeightPage = false;
         showSetSubaddressLookaheadPage = false;
-        seedOffsetPassphrase = "";
-        password = "";
-        address = "";
-        secretViewKey = "";
-        secretSpendKey = "";
+
+        // Securely clear sensitive strings
+        seedOffsetPassphrase.fill('0');
+        seedOffsetPassphrase.clear();
+        seedLanguage = constants::seedLanguage;
+        password.fill('0');
+        password.clear();
+        address.clear();
+        secretViewKey.fill('0');
+        secretViewKey.clear();
+        secretSpendKey.fill('0');
+        secretSpendKey.clear();
+
+        // Reset numeric values
         restoreHeight = 0;
-        subaddressLookahead = "";
+        subaddressLookahead.clear();
+
+        // Reset mode to default
+        mode = WizardMode::CreateWallet;
+        seedType = Seed::POLYSEED;
     }
 
     WizardFields(): deviceType(DeviceType::LEDGER), mode(WizardMode::CreateWallet),
@@ -87,6 +108,10 @@ public:
 
     explicit WalletWizard(QWidget *parent = nullptr);
     void resetFields();
+
+protected:
+    void done(int result) override;
+    void reject() override;
 
 signals:
     void initialNetworkConfigured();

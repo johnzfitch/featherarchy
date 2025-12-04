@@ -78,10 +78,9 @@ void PaymentRequestDialog::updatePaymentRequest() {
     ui->line_paymentRequestUri->setText(uri);
     ui->line_paymentRequestUri->setCursorPosition(0);
 
-    // TODO: memory leak, cba to refactor now
-    m_qrCode = new QrCode(uri, QrCode::Version::AUTO, QrCode::ErrorCorrectionLevel::MEDIUM);
+    m_qrCode.reset(new QrCode(uri, QrCode::Version::AUTO, QrCode::ErrorCorrectionLevel::MEDIUM));
     if (m_qrCode->isValid()) {
-        ui->qrWidget->setQrCode(m_qrCode);
+        ui->qrWidget->setQrCode(m_qrCode.data());
     }
 }
 
@@ -107,7 +106,7 @@ void PaymentRequestDialog::copyLink() {
 }
 
 void PaymentRequestDialog::copyImage() {
-    QApplication::clipboard()->setPixmap(m_qrCode->toPixmap(1).scaled(500, 500, Qt::KeepAspectRatio));
+    QApplication::clipboard()->setPixmap(m_qrCode.data()->toPixmap(1).scaled(500, 500, Qt::KeepAspectRatio));
     QMessageBox::information(this, "Information", "QR code copied to clipboard.");
 }
 
@@ -119,7 +118,7 @@ void PaymentRequestDialog::saveImage() {
 
     QFile file(filename);
     file.open(QIODevice::WriteOnly);
-    m_qrCode->toPixmap(1).scaled(500, 500, Qt::KeepAspectRatio).save(&file, "PNG");
+    m_qrCode.data()->toPixmap(1).scaled(500, 500, Qt::KeepAspectRatio).save(&file, "PNG");
     QMessageBox::information(this, "Information", "QR code saved to file");
 }
 

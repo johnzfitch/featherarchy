@@ -85,5 +85,46 @@
     <file>dark/radio_unchecked_disabled.svg</file>
     <file>light.qss</file>
     <file>dark.qss</file>
+    <file>omarchy.qss</file>
+    <file>omarchy/hmovetoolbar.svg</file>
+    <file>omarchy/vmovetoolbar.svg</file>
+    <file>omarchy/hsepartoolbar.svg</file>
+    <file>omarchy/vsepartoolbars.svg</file>
+    <file>omarchy/stylesheet-branch-end.svg</file>
+    <file>omarchy/stylesheet-branch-end-closed.svg</file>
+    <file>omarchy/stylesheet-branch-end-open.svg</file>
+    <file>omarchy/stylesheet-vline.svg</file>
+    <file>omarchy/stylesheet-branch-more.svg</file>
+    <file>omarchy/branch_closed.svg</file>
+    <file>omarchy/branch_closed-on.svg</file>
+    <file>omarchy/branch_open.svg</file>
+    <file>omarchy/branch_open-on.svg</file>
+    <file>omarchy/down_arrow.svg</file>
+    <file>omarchy/down_arrow_disabled.svg</file>
+    <file>omarchy/down_arrow-hover.svg</file>
+    <file>omarchy/left_arrow.svg</file>
+    <file>omarchy/left_arrow_disabled.svg</file>
+    <file>omarchy/right_arrow.svg</file>
+    <file>omarchy/right_arrow_disabled.svg</file>
+    <file>omarchy/up_arrow.svg</file>
+    <file>omarchy/up_arrow_disabled.svg</file>
+    <file>omarchy/up_arrow-hover.svg</file>
+    <file>omarchy/sizegrip.svg</file>
+    <file>omarchy/transparent.svg</file>
+    <file>omarchy/close.svg</file>
+    <file>omarchy/close-hover.svg</file>
+    <file>omarchy/close-pressed.svg</file>
+    <file>omarchy/undock.svg</file>
+    <file>omarchy/undock-hover.svg</file>
+    <file>omarchy/checkbox_checked.svg</file>
+    <file>omarchy/checkbox_checked_disabled.svg</file>
+    <file>omarchy/checkbox_indeterminate.svg</file>
+    <file>omarchy/checkbox_indeterminate_disabled.svg</file>
+    <file>omarchy/checkbox_unchecked.svg</file>
+    <file>omarchy/checkbox_unchecked_disabled.svg</file>
+    <file>omarchy/radio_checked.svg</file>
+    <file>omarchy/radio_checked_disabled.svg</file>
+    <file>omarchy/radio_unchecked.svg</file>
+    <file>omarchy/radio_unchecked_disabled.svg</file>
   </qresource>
 </RCC>

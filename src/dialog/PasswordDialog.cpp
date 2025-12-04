@@ -26,4 +26,20 @@ PasswordDialog::PasswordDialog(const QString &walletName, bool incorrectPassword
     this->adjustSize();
 }
 
-PasswordDialog::~PasswordDialog() = default;
+void PasswordDialog::secureWipePassword() {
+    // Overwrite password memory with zeros before clearing
+    password.fill('0');
+    password.clear();
+
+    // Also clear the line edit widget
+    if (ui && ui->line_password) {
+        QString lineText = ui->line_password->text();
+        lineText.fill('0');
+        ui->line_password->clear();
+    }
+}
+
+PasswordDialog::~PasswordDialog() {
+    // Ensure password is securely wiped on destruction
+    secureWipePassword();
+}

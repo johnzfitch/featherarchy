@@ -35,6 +35,8 @@ protected:
     void keyPressEvent(QKeyEvent* e) override;
 
 private:
+    void secureWipePassword();
+
     QScopedPointer<Ui::WalletUnlockWidget> ui;
     Wallet *m_wallet;
 };

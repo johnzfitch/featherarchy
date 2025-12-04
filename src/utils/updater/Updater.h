@@ -5,6 +5,8 @@
 
 #include <QPair>
 #include <QNetworkReply>
+#include <QMutex>
+#include <atomic>
 
 #include <openpgp/openpgp.h>
 
@@ -29,6 +31,16 @@ public:
     QString verifySignature(const QByteArray &armoredSignedMessage, QString &signer) const;
     QByteArray parseShasumOutput(const QString &message, const QString &filename) const;
 
+    // Thread-safe getters for state
+    State getState() const;
+    QString getVersion() const;
+    QString getBinaryFilename() const;
+    QString getDownloadUrl() const;
+    QString getHash() const;
+    QString getSigner() const;
+    QString getStoredPlatformTag() const;
+
+    // Legacy public members - deprecated, use getters instead
     State state = State::NO_UPDATE;
     QString version;
     QString binaryFilename;
@@ -54,4 +66,6 @@ private:
 
 private:
     std::vector<openpgp::public_key_block> m_maintainers;
+    mutable QMutex m_stateMutex;
+    std::atomic<bool> m_checking{false};
 };

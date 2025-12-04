@@ -32,39 +32,51 @@ WalletUnlockWidget::WalletUnlockWidget(QWidget *parent, Wallet *wallet)
     }
 }
 
+void WalletUnlockWidget::secureWipePassword() {
+    if (ui && ui->line_password) {
+        QString text = ui->line_password->text();
+        text.fill('0');
+        ui->line_password->clear();
+    }
+}
+
 void WalletUnlockWidget::setWalletName(const QString &walletName) {
     ui->label_fileName->setText(walletName);
 }
 
 void WalletUnlockWidget::reset() {
     ui->label_incorrectPassword->hide();
-    ui->line_password->setText("");
+    this->secureWipePassword();
     ui->line_password->setFocus();
 }
 
 void WalletUnlockWidget::incorrectPassword() {
     ui->label_incorrectPassword->show();
-    ui->line_password->clear();
+    this->secureWipePassword();
 }
 
 void WalletUnlockWidget::tryUnlock() {
-    emit unlockWallet(ui->line_password->text());
+    QString password = ui->line_password->text();
+    this->secureWipePassword();
+    emit unlockWallet(password);
 }
 
 void WalletUnlockWidget::keyPressEvent(QKeyEvent *e) {
     switch (e->key()) {
         case Qt::Key_Enter:
         case Qt::Key_Return:
-            ui->buttonBox->accepted();
-            e->ignore();
+            emit ui->buttonBox->accepted();
+            e->accept();
             break;
         case Qt::Key_Escape:
-            ui->buttonBox->rejected();
-            e->ignore();
+            emit ui->buttonBox->rejected();
+            e->accept();
             break;
         default:
-            e->ignore();
+            QWidget::keyPressEvent(e);
     }
 }
 
-WalletUnlockWidget::~WalletUnlockWidget() = default;
+WalletUnlockWidget::~WalletUnlockWidget() {
+    this->secureWipePassword();
+}

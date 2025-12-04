@@ -23,9 +23,16 @@ Updater::Updater(QObject *parent) :
 }
 
 void Updater::checkForUpdates() {
+    // Prevent concurrent update checks
+    if (m_checking.exchange(true)) {
+        qDebug() << "Update check already in progress, skipping";
+        return;
+    }
+
     Networking network{this};
     QNetworkReply *reply = network.getJson(this, QString("%1/updates.json").arg(this->getWebsiteUrl()));
     if (!reply) {
+        m_checking = false;
         emit updateCheckFailed("offline mode enabled");
         return;
     }
@@ -46,6 +53,7 @@ void Updater::onUpdateCheckResponse(QNetworkReply *reply) {
     }
     else {
         qWarning() << err;
+        m_checking = false;
         emit updateCheckFailed(err);
         return;
     }
@@ -61,6 +69,7 @@ void Updater::wsUpdatesReceived(const QJsonObject &updates) {
     QString platformTag = getPlatformTag();
     if (platformTag.isEmpty()) {
         QString err{"Unsupported platform, unable to fetch update"};
+        m_checking = false;
         emit updateCheckFailed(err);
         qWarning() << err;
         return;
@@ -69,6 +78,7 @@ void Updater::wsUpdatesReceived(const QJsonObject &updates) {
     QJsonObject platformData = updates["platform"].toObject()[platformTag].toObject();
     if (platformData.isEmpty()) {
         QString err{"Unable to find current platform in updates data"};
+        m_checking = false;
         emit updateCheckFailed(err);
         qWarning() << err;
         return;
@@ -76,6 +86,7 @@ void Updater::wsUpdatesReceived(const QJsonObject &updates) {
 
     QString newVersion = platformData["version"].toString();
     if (SemanticVersion::fromString(newVersion) <= featherVersion) {
+        m_checking = false;
         emit noUpdateAvailable();
         return;
     }
@@ -94,6 +105,7 @@ void Updater::wsUpdatesReceived(const QJsonObject &updates) {
 void Updater::onSignedHashesReceived(QNetworkReply *reply, const QString &platformTag, const QString &version) {
     if (reply->error() != QNetworkReply::NoError) {
         QString err{QString("Unable to fetch signed hashed: %1").arg(reply->errorString())};
+        m_checking = false;
         emit updateCheckFailed(err);
         qWarning() << err;
         return;
@@ -110,6 +122,7 @@ void Updater::onSignedHashesReceived(QNetworkReply *reply, const QString &platfo
     }
     catch (const std::exception &e) {
         QString err{QString("Failed to fetch and verify signed hash: %1").arg(e.what())};
+        m_checking = false;
         emit updateCheckFailed(err);
         qWarning() << err;
         return;
@@ -118,14 +131,19 @@ void Updater::onSignedHashesReceived(QNetworkReply *reply, const QString &platfo
     QString hash = signedHash.toHex();
     qInfo() << "Update found: " << binaryFilename << hash << "signed by:" << signer;
 
-    this->state = Updater::State::UPDATE_AVAILABLE;
-    this->version = version;
-    this->binaryFilename = binaryFilename;
-    this->downloadUrl = QString("%1/files/releases/%2/%3").arg(this->getWebsiteUrl(), platformTag, binaryFilename);
-    this->hash = hash;
-    this->signer = signer;
-    this->platformTag = platformTag;
+    // Thread-safe update of state variables
+    {
+        QMutexLocker locker(&m_stateMutex);
+        this->state = Updater::State::UPDATE_AVAILABLE;
+        this->version = version;
+        this->binaryFilename = binaryFilename;
+        this->downloadUrl = QString("%1/files/releases/%2/%3").arg(this->getWebsiteUrl(), platformTag, binaryFilename);
+        this->hash = hash;
+        this->signer = signer;
+        this->platformTag = platformTag;
+    }
 
+    m_checking = false;
     emit updateAvailable();
 }
 
@@ -255,4 +273,40 @@ QString Updater::verifySignature(const epee::span<const uint8_t> data, const ope
     }
 
     throw std::runtime_error("not signed by a maintainer");
+}
+
+// Thread-safe getters
+Updater::State Updater::getState() const {
+    QMutexLocker locker(&m_stateMutex);
+    return state;
+}
+
+QString Updater::getVersion() const {
+    QMutexLocker locker(&m_stateMutex);
+    return version;
+}
+
+QString Updater::getBinaryFilename() const {
+    QMutexLocker locker(&m_stateMutex);
+    return binaryFilename;
+}
+
+QString Updater::getDownloadUrl() const {
+    QMutexLocker locker(&m_stateMutex);
+    return downloadUrl;
+}
+
+QString Updater::getHash() const {
+    QMutexLocker locker(&m_stateMutex);
+    return hash;
+}
+
+QString Updater::getSigner() const {
+    QMutexLocker locker(&m_stateMutex);
+    return signer;
+}
+
+QString Updater::getStoredPlatformTag() const {
+    QMutexLocker locker(&m_stateMutex);
+    return platformTag;
 }

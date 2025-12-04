@@ -35,7 +35,7 @@ private:
     QScopedPointer<Ui::PaymentRequestDialog> ui;
     Wallet *m_wallet;
     QString m_address;
-    QrCode *m_qrCode;
+    QScopedPointer<QrCode> m_qrCode;
 };
 
 #endif //FEATHER_PAYMENTREQUESTDIALOG_H

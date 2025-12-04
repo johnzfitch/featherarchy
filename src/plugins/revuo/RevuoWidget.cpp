@@ -68,7 +68,9 @@ void RevuoWidget::updateItems(const QList<QSharedPointer<RevuoItem>> &items) {
 
         QString text = "<h3>Recent News</h3>\n";
         for (const auto &newsbyte : item->newsbytes) {
-            text += "<p> • " + newsbyte + "</p>\n";
+            // Sanitize external content to prevent XSS
+            QString sanitizedNewsbyte = newsbyte.toHtmlEscaped();
+            text += "<p> • " + sanitizedNewsbyte + "</p>\n";
         }
         text += "╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍\n";
         text += "<h3>Upcoming Events</h3>\n";
@@ -76,16 +78,28 @@ void RevuoWidget::updateItems(const QList<QSharedPointer<RevuoItem>> &items) {
             text += "<p>There are no upcoming events.</p>\n";
         }
         for (const auto &event : item->events) {
-            text += "<h4>" + event.first + "</h4>\n";
-            text += "<p>" + event.second + "</p>\n";
+            // Sanitize external content to prevent XSS
+            QString sanitizedDate = event.first.toHtmlEscaped();
+            QString sanitizedDescription = event.second.toHtmlEscaped();
+            text += "<h4>" + sanitizedDate + "</h4>\n";
+            text += "<p>" + sanitizedDescription + "</p>\n";
         }
         text += "<hr>";
-        text += QString("Read the whole issue in your <a href=\"%1\">browser</a>.").arg(item->url);
+
+        // Validate URL before using it
+        QUrl url(item->url);
+        if (url.isValid() && (url.scheme() == "http" || url.scheme() == "https")) {
+            text += QString("Read the whole issue in your <a href=\"%1\">browser</a>.").arg(url.toString(QUrl::FullyEncoded));
+        } else {
+            qWarning() << "Invalid or unsafe URL rejected:" << item->url;
+            text += "<p>URL unavailable</p>";
+        }
+
         text += "<br><br>\nEnjoy Revuo? Consider a <a href=\"feather://donate-revuo\">donation</a> to the author.";
 
         m_items.append(text);
         m_links.append(item->url);
-        ui->combo_issue->addItem(item->title);
+        ui->combo_issue->addItem(item->title.toHtmlEscaped());
     }
 
     ui->combo_issue->setCurrentIndex(0);
@@ -107,11 +121,28 @@ void RevuoWidget::onLinkActivated(const QUrl &link) {
         return;
     }
 
+    // Validate URL before opening
+    if (!link.isValid() || (link.scheme() != "http" && link.scheme() != "https")) {
+        qWarning() << "Invalid or unsafe URL rejected:" << link.toString();
+        return;
+    }
+
     Utils::externalLinkWarning(this, link.toString());
 }
 
 void RevuoWidget::onOpenLink() {
     int currentItem = ui->combo_issue->currentIndex();
+    if (currentItem < 0 || currentItem >= m_links.size()) {
+        return;
+    }
+
+    // Validate URL before opening
+    QUrl url(m_links[currentItem]);
+    if (!url.isValid() || (url.scheme() != "http" && url.scheme() != "https")) {
+        qWarning() << "Invalid or unsafe URL rejected:" << m_links[currentItem];
+        return;
+    }
+
     Utils::externalLinkWarning(this, m_links[currentItem]);
 }
 

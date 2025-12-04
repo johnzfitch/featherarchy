@@ -24,6 +24,7 @@ public:
     bool validatePage() override;
     bool isComplete() const override;
     int nextId() const override;
+    void cleanupPage() override;
 
 public slots:
     void displaySeed(const QString &seed);

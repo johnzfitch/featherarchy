@@ -17,6 +17,11 @@ SubaddressModel::SubaddressModel(QObject *parent, Subaddress *subaddress)
     : QAbstractTableModel(parent)
     , m_subaddress(subaddress)
 {
+    if (!m_subaddress) {
+        qCritical() << "SubaddressModel: Subaddress pointer is null";
+        return;
+    }
+
     connect(m_subaddress, &Subaddress::refreshStarted, this, &SubaddressModel::beginResetModel);
     connect(m_subaddress, &Subaddress::refreshFinished, this, &SubaddressModel::endResetModel);
     connect(m_subaddress, &Subaddress::beginAddRow, this, &SubaddressModel::beginRowAdded);
@@ -28,9 +33,13 @@ int SubaddressModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid()) {
         return 0;
-    } else {
-        return m_subaddress->count();
     }
+
+    if (!m_subaddress) {
+        return 0;
+    }
+
+    return m_subaddress->count();
 }
 
 int SubaddressModel::columnCount(const QModelIndex &parent) const
@@ -43,6 +52,10 @@ int SubaddressModel::columnCount(const QModelIndex &parent) const
 
 QVariant SubaddressModel::data(const QModelIndex &index, int role) const
 {
+    if (!m_subaddress) {
+        return {};
+    }
+
     const QList<SubaddressRow>& rows = m_subaddress->getRows();
     if (index.row() < 0 || index.row() >= rows.size()) {
         return {};
@@ -160,21 +173,31 @@ QVariant SubaddressModel::headerData(int section, Qt::Orientation orientation, i
 
 bool SubaddressModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (index.isValid() && role == Qt::EditRole) {
-        const int row = index.row();
-
-        switch (index.column()) {
-            case Label:
-                m_subaddress->setLabel(row, value.toString());
-                break;
-            default:
-                return false;
-        }
-        emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
-
-        return true;
+    if (!index.isValid() || role != Qt::EditRole) {
+        return false;
     }
-    return false;
+
+    if (!m_subaddress) {
+        return false;
+    }
+
+    const int row = index.row();
+
+    // Bounds check
+    if (row < 0 || row >= m_subaddress->count()) {
+        return false;
+    }
+
+    switch (index.column()) {
+        case Label:
+            m_subaddress->setLabel(row, value.toString());
+            break;
+        default:
+            return false;
+    }
+
+    emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
+    return true;
 }
 
 Qt::ItemFlags SubaddressModel::flags(const QModelIndex &index) const
@@ -189,16 +212,51 @@ Qt::ItemFlags SubaddressModel::flags(const QModelIndex &index) const
 }
 
 const SubaddressRow& SubaddressModel::entryFromIndex(const QModelIndex &index) const {
-    Q_ASSERT(index.isValid() && index.row() < m_subaddress->count());
+    if (!index.isValid()) {
+        qCritical() << "SubaddressModel::entryFromIndex: Invalid index";
+        static SubaddressRow dummy("", "", false, false, false, false);
+        return dummy;
+    }
+
+    if (!m_subaddress) {
+        qCritical() << "SubaddressModel::entryFromIndex: Null subaddress pointer";
+        static SubaddressRow dummy("", "", false, false, false, false);
+        return dummy;
+    }
+
+    if (index.row() < 0 || index.row() >= m_subaddress->count()) {
+        qCritical() << "SubaddressModel::entryFromIndex: Row out of bounds:" << index.row();
+        static SubaddressRow dummy("", "", false, false, false, false);
+        return dummy;
+    }
+
     return m_subaddress->row(index.row());
 }
 
 void SubaddressModel::rowUpdated(qsizetype index)
 {
+    if (!m_subaddress) {
+        return;
+    }
+
+    if (index < 0 || index >= m_subaddress->count()) {
+        qCritical() << "SubaddressModel::rowUpdated: Index out of bounds:" << index;
+        return;
+    }
+
     emit dataChanged(this->index(index, 0), this->index(index, SubaddressModel::COUNT - 1), {Qt::DisplayRole, Qt::EditRole});
 }
 
 void SubaddressModel::beginRowAdded(qsizetype index)
 {
-    this->beginInsertRows(this->index(index, 0), index, index);
+    if (!m_subaddress) {
+        return;
+    }
+
+    if (index < 0 || index > m_subaddress->count()) {
+        qCritical() << "SubaddressModel::beginRowAdded: Index out of bounds:" << index;
+        return;
+    }
+
+    this->beginInsertRows(QModelIndex(), index, index);
 }

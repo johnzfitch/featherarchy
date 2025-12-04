@@ -4,6 +4,10 @@
 #include "ui_ContactsDialog.h"
 #include "ContactsDialog.h"
 
+#include "constants.h"
+#include "libwalletqt/WalletManager.h"
+#include "utils/Utils.h"
+
 ContactsDialog::ContactsDialog(QWidget *parent, const QString &address, const QString &name)
         : WindowModalDialog(parent)
         , ui(new Ui::ContactsDialog)
@@ -17,9 +21,15 @@ ContactsDialog::ContactsDialog(QWidget *parent, const QString &address, const QS
         ui->lineEdit_name->setFocus();
     }
 
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, [&](){
-        m_address = ui->lineEdit_address->text();
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, [this](){
+        QString addr = ui->lineEdit_address->text().trimmed();
+        if (!addr.isEmpty() && !WalletManager::addressValid(addr, constants::networkType)) {
+            Utils::showError(this, "Invalid Address", "Please enter a valid Monero address.");
+            return;
+        }
+        m_address = addr;
         m_name = ui->lineEdit_name->text();
+        accept();
     });
 
     this->adjustSize();

@@ -119,7 +119,8 @@ void TransactionHistory::refresh()
             }
 
             uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change; // change may not be known
-            uint64_t fee = pd.m_amount_in - pd.m_amount_out;
+            // Bounds check to prevent unsigned underflow
+            uint64_t fee = (pd.m_amount_in >= pd.m_amount_out) ? (pd.m_amount_in - pd.m_amount_out) : 0;
 
             std::string payment_id = epee::string_tools::pod_to_hex(i->second.m_payment_id);
             if (payment_id.substr(16).find_first_not_of('0') == std::string::npos)
@@ -174,7 +175,8 @@ void TransactionHistory::refresh()
 
             const crypto::hash &hash = i->first;
             uint64_t amount = pd.m_amount_in;
-            uint64_t fee = amount - pd.m_amount_out;
+            // Bounds check to prevent unsigned underflow
+            uint64_t fee = (amount >= pd.m_amount_out) ? (amount - pd.m_amount_out) : 0;
             uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change;
             std::string payment_id = epee::string_tools::pod_to_hex(i->second.m_payment_id);
             if (payment_id.substr(16).find_first_not_of('0') == std::string::npos)

@@ -30,14 +30,6 @@ ReceiveWidget::ReceiveWidget(Wallet *wallet, QWidget *parent)
     ui->addresses->header()->setSectionResizeMode(SubaddressModel::Address, QHeaderView::ResizeToContents);
     ui->addresses->header()->setSectionResizeMode(SubaddressModel::Label, QHeaderView::Stretch);
 
-    connect(ui->addresses->selectionModel(), &QItemSelectionModel::selectionChanged, [=](const QItemSelection &selected, const QItemSelection &deselected){
-        this->updateQrCode();
-    });
-    connect(m_model, &SubaddressModel::modelReset, [this](){
-        this->updateQrCode();
-    });
-
-    ui->qrCode->setCursor(Qt::PointingHandCursor);
 
     // header context menu
     ui->addresses->header()->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -76,7 +68,7 @@ ReceiveWidget::ReceiveWidget(Wallet *wallet, QWidget *parent)
     connect(ui->addresses, &QTreeView::customContextMenuRequested, this, &ReceiveWidget::showContextMenu);
     connect(ui->addresses, &SubaddressView::copyAddress, this, &ReceiveWidget::copyAddress);
 
-    connect(ui->qrCode, &ClickableLabel::clicked, this, &ReceiveWidget::showQrCodeDialog);
+    connect(ui->btn_showQrCode, &QPushButton::clicked, this, &ReceiveWidget::showQrCodeDialog);
     connect(ui->search, &QLineEdit::textChanged, this, &ReceiveWidget::setSearchFilter);
 
     connect(ui->btn_generateSubaddress, &QPushButton::clicked, this, &ReceiveWidget::generateSubaddress);
@@ -239,24 +231,6 @@ void ReceiveWidget::generateSubaddress() {
     bool r = m_wallet->subaddress()->addRow("");
     if (!r) {
         Utils::showError(this, "Failed to generate subaddress", m_wallet->subaddress()->getError());
-    }
-}
-
-void ReceiveWidget::updateQrCode(){
-    QModelIndex index = getCurrentIndex();
-    if (!index.isValid()) {
-        ui->qrCode->clear();
-        ui->btn_createPaymentRequest->hide();
-        return;
-    }
-
-    QString address = this->getAddress(index.row());
-    const QrCode qrc(address, QrCode::Version::AUTO, QrCode::ErrorCorrectionLevel::MEDIUM);
-
-    int width = ui->qrCode->width() - 4;
-    if (qrc.isValid()) {
-        ui->qrCode->setPixmap(qrc.toPixmap(1).scaled(width, width, Qt::KeepAspectRatio));
-        ui->btn_createPaymentRequest->show();
     }
 }
 

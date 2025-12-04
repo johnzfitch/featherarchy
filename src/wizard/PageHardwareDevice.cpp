@@ -5,6 +5,7 @@
 #include "ui_PageHardwareDevice.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialogButtonBox>
 #include <QPushButton>
 
@@ -21,6 +22,12 @@ PageHardwareDevice::PageHardwareDevice(WizardFields *fields, QWidget *parent)
     ui->combo_deviceType->addItem("Trezor", DeviceType::TREZOR);
 
     connect(ui->btnOptions, &QPushButton::clicked, this, &PageHardwareDevice::onOptionsClicked);
+
+    // Update device type immediately when user selects it
+    // This ensures PageWalletFile can use the correct default wallet name
+    connect(ui->combo_deviceType, QOverload<int>::of(&QComboBox::currentIndexChanged), [this](int index){
+        m_fields->deviceType = static_cast<DeviceType>(ui->combo_deviceType->itemData(index).toInt());
+    });
 }
 
 void PageHardwareDevice::initializePage() {
@@ -28,10 +35,17 @@ void PageHardwareDevice::initializePage() {
 }
 
 int PageHardwareDevice::nextId() const {
+    // Check if user requested subaddress lookahead configuration
+    if (m_fields->showSetSubaddressLookaheadPage) {
+        return WalletWizard::Page_SetSubaddressLookahead;
+    }
+
+    // Check if user is restoring and needs to set restore height
     if (m_fields->showSetRestoreHeightPage) {
         return WalletWizard::Page_SetRestoreHeight;
     }
 
+    // Go directly to wallet file page (which will then go to password page)
     return WalletWizard::Page_WalletFile;
 }
 

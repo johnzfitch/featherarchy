@@ -282,6 +282,10 @@ void Nodes::autoConnect(bool forceReconnect) {
 
         // try connect
         FeatherNode node = this->pickEligibleNode();
+        if (!node.isValid()) {
+            qWarning() << "No eligible node available for connection";
+            return;
+        }
         this->connectToNode(node);
         return;
     }

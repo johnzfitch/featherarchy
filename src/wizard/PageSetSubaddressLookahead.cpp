@@ -24,7 +24,7 @@ PageSetSubaddressLookahead::PageSetSubaddressLookahead(WizardFields *fields, QWi
     });
 
     ui->line_minor->setValidator(indexValidator);
-    connect(ui->line_major, &QLineEdit::textChanged, [this]{
+    connect(ui->line_minor, &QLineEdit::textChanged, [this]{
         this->completeChanged();
     });
 

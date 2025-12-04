@@ -21,6 +21,7 @@ public:
     QString password();
     bool passwordsMatch();
     void resetFields();
+    void secureWipe();
 
 signals:
     void passwordEntryChanged();

@@ -67,6 +67,11 @@ int main(int argc, char *argv[])
     ::signal(SIGABRT, &signal_handler);
 #endif
 
+    // Omarchy: Bake in 1.35x scaling for native rendering
+    // This must be set before QApplication is created
+    qputenv("QT_SCALE_FACTOR", "1.35");
+    qputenv("QT_QPA_PLATFORM", "wayland");
+
 #if defined(HAS_TOR_BIN)
     Q_INIT_RESOURCE(assets_tor);
 #endif
@@ -85,7 +90,9 @@ if (AttachConsole(ATTACH_PARENT_PROCESS)) {
 
     Application app(argc, argv);
 
-    QApplication::setApplicationName("FeatherWallet");
+    // Omarchy: Set app ID for Hyprland window rules (opacity, floating, etc.)
+    QApplication::setDesktopFileName("feather-omarchy");
+    QApplication::setApplicationName("feather-omarchy");
     QApplication::setApplicationVersion(FEATHER_VERSION);
 
     QCommandLineParser parser;

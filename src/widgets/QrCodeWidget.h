@@ -14,6 +14,7 @@ class QrCodeWidget : public QWidget
 
 public:
     explicit QrCodeWidget(QWidget *parent = nullptr);
+    ~QrCodeWidget();
     void setQrCode(QrCode *qrCode);
 
 protected:

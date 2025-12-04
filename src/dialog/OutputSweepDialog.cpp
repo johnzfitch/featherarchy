@@ -4,7 +4,9 @@
 #include "OutputSweepDialog.h"
 #include "ui_OutputSweepDialog.h"
 
+#include "constants.h"
 #include "libwalletqt/WalletManager.h"
+#include "utils/Utils.h"
 
 OutputSweepDialog::OutputSweepDialog(QWidget *parent, quint64 amount)
         : WindowModalDialog(parent)
@@ -18,15 +20,24 @@ OutputSweepDialog::OutputSweepDialog(QWidget *parent, quint64 amount)
        ui->lineEdit_address->setText(toggled ? "This account" : "");
     });
 
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, [&](){
-        m_address = ui->lineEdit_address->text();
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, [this](){
         m_churn = ui->checkBox_churn->isChecked();
+        QString addr = ui->lineEdit_address->text().trimmed();
+
+        // Validate address if not churning (churning sends to own account)
+        if (!m_churn && !WalletManager::addressValid(addr, constants::networkType)) {
+            Utils::showError(this, "Invalid Address", "Please enter a valid Monero address.");
+            return;
+        }
+
+        m_address = addr;
         m_outputs = ui->spinBox_numOutputs->value();
         m_feeLevel = ui->combo_feePriority->currentIndex();
+        accept();
     });
 
     connect(ui->spinBox_numOutputs, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value){
-        if (value == 1) {
+        if (value <= 1) {
             ui->label_split->setText("");
             return;
         }

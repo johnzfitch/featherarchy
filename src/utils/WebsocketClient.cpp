@@ -7,6 +7,7 @@
 #include <QRandomGenerator>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSslConfiguration>
 
 #include "utils/config.h"
 #include "utils/Utils.h"
@@ -23,6 +24,20 @@ WebsocketClient::WebsocketClient(QObject *parent)
     connect(webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, &WebsocketClient::onError);
 
     connect(webSocket, &QWebSocket::binaryMessageReceived, this, &WebsocketClient::onbinaryMessageReceived);
+
+    // Configure SSL/TLS security for WebSocket connections
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    sslConfig.setPeerVerifyMode(QSslSocket::VerifyPeer);
+    sslConfig.setProtocol(QSsl::TlsV1_2OrLater);
+    webSocket->setSslConfiguration(sslConfig);
+
+    // Handle SSL errors
+    connect(webSocket, &QWebSocket::sslErrors, this, [](const QList<QSslError> &errors) {
+        qCritical() << "WebSocket SSL errors:";
+        for (const auto &error : errors) {
+            qCritical() << "  -" << error.errorString();
+        }
+    });
 
     // Keep websocket connection alive
     connect(&m_pingTimer, &QTimer::timeout, [this]{

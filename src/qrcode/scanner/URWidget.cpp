@@ -60,8 +60,8 @@ void URWidget::nextQR() {
     
     ui->label_seq->setText(QString("%1/%2").arg(QString::number(currentIndex % m_urencoder->seq_len() + 1), QString::number(m_urencoder->seq_len())));
 
-    m_code = new QrCode{QString::fromStdString(data), QrCode::Version::AUTO, QrCode::ErrorCorrectionLevel::MEDIUM};
-    ui->qrWidget->setQrCode(m_code);
+    m_code.reset(new QrCode{QString::fromStdString(data), QrCode::Version::AUTO, QrCode::ErrorCorrectionLevel::MEDIUM});
+    ui->qrWidget->setQrCode(m_code.data());
     
     currentIndex += 1;
 }

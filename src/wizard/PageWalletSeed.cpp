@@ -175,3 +175,44 @@ bool PageWalletSeed::validatePage() {
 bool PageWalletSeed::isComplete() const {
     return !m_seedError;
 }
+
+void PageWalletSeed::cleanupPage() {
+    // Security: Clear seed from UI display
+    ui->seedWord1->clear();
+    ui->seedWord2->clear();
+    ui->seedWord3->clear();
+    ui->seedWord4->clear();
+    ui->seedWord5->clear();
+    ui->seedWord6->clear();
+    ui->seedWord7->clear();
+    ui->seedWord8->clear();
+    ui->seedWord9->clear();
+    ui->seedWord10->clear();
+    ui->seedWord11->clear();
+    ui->seedWord12->clear();
+    ui->seedWord13->clear();
+    ui->seedWord14->clear();
+    ui->seedWord15->clear();
+    ui->seedWord16->clear();
+
+    // Security: Wipe seed mnemonic from memory
+    if (!m_seed.mnemonic.isEmpty()) {
+        // Overwrite each word in the mnemonic list
+        for (int i = 0; i < m_seed.mnemonic.size(); i++) {
+            m_seed.mnemonic[i].fill('0');
+        }
+        m_seed.mnemonic.clear();
+    }
+
+    // Security: Clear spend key if present
+    if (!m_seed.spendKey.isEmpty()) {
+        m_seed.spendKey.fill('0');
+        m_seed.spendKey.clear();
+    }
+
+    // Security: Clear correction data if present
+    if (!m_seed.correction.isEmpty()) {
+        m_seed.correction.fill('0');
+        m_seed.correction.clear();
+    }
+}

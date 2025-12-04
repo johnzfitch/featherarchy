@@ -29,6 +29,7 @@ WalletWizard::WalletWizard(QWidget *parent)
 {
     this->setWindowTitle("Welcome to Feather Wallet");
     this->setWindowIcon(QIcon(":/assets/images/appicons/64x64.png"));
+    this->setMinimumSize(500, 400);
 
     m_walletKeysFilesModel = new WalletKeysFilesModel(this);
     m_walletKeysFilesModel->refresh();
@@ -62,7 +63,8 @@ WalletWizard::WalletWizard(QWidget *parent)
     setStartId(Page_Menu);
 
     setButtonText(QWizard::CancelButton, "Close");
-    setPixmap(QWizard::WatermarkPixmap, QPixmap(":/assets/images/banners/3.png"));
+    // Omarchy: Remove oversized watermark for cleaner UX
+    // setPixmap(QWizard::WatermarkPixmap, QPixmap(":/assets/images/banners/3.png"));
     setWizardStyle(WizardStyle::ModernStyle);
     setOption(QWizard::NoBackButtonOnStartPage);
     setOption(QWizard::HaveHelpButton, true);
@@ -107,7 +109,39 @@ void WalletWizard::resetFields() {
     m_wizardFields = {};
 }
 
+void WalletWizard::done(int result) {
+    // Clear sensitive data when wizard completes (either accepted or rejected)
+    if (result == QDialog::Accepted) {
+        // Wallet was created/opened successfully
+        // Clear the wizard state to prevent data leakage
+        m_wizardFields.clearFields();
+    } else {
+        // User cancelled or wizard was rejected
+        // Securely clear all sensitive data
+        m_wizardFields.clearFields();
+    }
+
+    QWizard::done(result);
+}
+
+void WalletWizard::reject() {
+    // Clear sensitive data when user cancels
+    m_wizardFields.clearFields();
+    QWizard::reject();
+}
+
 void WalletWizard::onCreateWallet() {
+    // Validate required fields before proceeding
+    if (m_wizardFields.walletDir.isEmpty() || m_wizardFields.walletName.isEmpty()) {
+        qCritical() << "Wallet directory or name not set";
+        return;
+    }
+
+    if (m_wizardFields.password.isEmpty()) {
+        qCritical() << "Wallet password not set";
+        return;
+    }
+
     auto walletPath = QString("%1/%2").arg(m_wizardFields.walletDir, m_wizardFields.walletName);
 
     int currentBlockHeight = 0;
@@ -128,6 +162,10 @@ void WalletWizard::onCreateWallet() {
                 break;
             case DeviceType::TREZOR:
                 deviceName = "Trezor";
+                break;
+            default:
+                qCritical() << "Invalid device type";
+                return;
         }
 
         emit createWalletFromDevice(walletPath, m_wizardFields.password, deviceName, restoreHeight, m_wizardFields.subaddressLookahead);
@@ -135,6 +173,12 @@ void WalletWizard::onCreateWallet() {
     }
 
     if (m_wizardFields.mode == WizardMode::RestoreFromKeys) {
+        // Validate required fields for key restoration
+        if (m_wizardFields.address.isEmpty() || m_wizardFields.secretViewKey.isEmpty()) {
+            qCritical() << "Address or view key not set for key restoration";
+            return;
+        }
+
         emit createWalletFromKeys(walletPath,
                                   m_wizardFields.password,
                                   m_wizardFields.address,
@@ -145,13 +189,22 @@ void WalletWizard::onCreateWallet() {
         return;
     }
 
+    // Validate seed is present for CreateWallet and RestoreFromSeed modes
+    if (m_wizardFields.mode == WizardMode::CreateWallet || m_wizardFields.mode == WizardMode::RestoreFromSeed) {
+        if (m_wizardFields.seed.mnemonic.isEmpty()) {
+            qCritical() << "Seed mnemonic not set";
+            return;
+        }
+    }
+
     // If we're connected to the websocket, use the reported height for new wallets to skip initial synchronization.
     if (m_wizardFields.mode == WizardMode::CreateWallet && currentBlockHeight > 0) {
         qInfo() << "New wallet, setting restore height to latest blockheight: " << currentBlockHeight;
         m_wizardFields.seed.restoreHeight = currentBlockHeight;
     }
 
-    if (m_wizardFields.mode == WizardMode::RestoreFromSeed && (m_wizardFields.seedType == Seed::Type::MONERO || m_wizardFields.showSetRestoreHeightPage)) {
+    // Set restore height for all seed restoration operations
+    if (m_wizardFields.mode == WizardMode::RestoreFromSeed) {
         m_wizardFields.seed.setRestoreHeight(m_wizardFields.restoreHeight);
     }
 

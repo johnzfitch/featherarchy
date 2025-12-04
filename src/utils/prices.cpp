@@ -59,7 +59,12 @@ double Prices::convert(QString symbolFrom, QString symbolTo, double amount) {
         if (symbolFrom == "USD") {
             usdPrice = amount;
         } else {
-            usdPrice = amount / this->rates[symbolFrom];
+            double rate = this->rates[symbolFrom];
+            if (rate == 0.0) {
+                qWarning() << "Division by zero avoided: rate for" << symbolFrom << "is zero";
+                return 0.0;
+            }
+            usdPrice = amount / rate;
         }
     }
     else {
@@ -69,8 +74,14 @@ double Prices::convert(QString symbolFrom, QString symbolTo, double amount) {
     if (symbolTo == "USD")
         return usdPrice;
 
-    if (this->markets.contains(symbolTo))
-        return usdPrice / this->markets[symbolTo].price_usd;
+    if (this->markets.contains(symbolTo)) {
+        double price = this->markets[symbolTo].price_usd;
+        if (price == 0.0) {
+            qWarning() << "Division by zero avoided: price_usd for" << symbolTo << "is zero";
+            return 0.0;
+        }
+        return usdPrice / price;
+    }
     else if (this->rates.contains(symbolTo))
         return usdPrice * this->rates[symbolTo];
 

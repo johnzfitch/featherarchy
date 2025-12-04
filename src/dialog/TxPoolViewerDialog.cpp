@@ -73,9 +73,14 @@ void TxPoolViewerDialog::onTxPoolBacklog(const QVector<TxBacklogEntry> &txPool, 
         item->setData(1, Qt::UserRole, entry.fee);
         item->setTextAlignment(1, Qt::AlignRight);
 
-        quint64 fee_per_byte = entry.fee / entry.weight;
-        item->setText(2, QString::number(entry.fee / entry.weight));
-        item->setData(2, Qt::UserRole, entry.fee / entry.weight);
+        quint64 fee_per_byte = 0;
+        if (entry.weight > 0) {
+            fee_per_byte = entry.fee / entry.weight;
+        } else {
+            qWarning() << "Division by zero avoided: transaction weight is zero";
+        }
+        item->setText(2, QString::number(fee_per_byte));
+        item->setData(2, Qt::UserRole, fee_per_byte);
         item->setTextAlignment(2, Qt::AlignRight);
 
         if (fee_per_byte == baseFees[0]) {

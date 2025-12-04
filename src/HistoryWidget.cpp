@@ -90,6 +90,12 @@ void HistoryWidget::showContextMenu(const QPoint &point) {
     if (!txIdx.isValid()) {
         return;
     }
+
+    if (txIdx.row() < 0 || txIdx.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << txIdx.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(txIdx);
 
     bool unconfirmed = tx.failed || tx.pending;
@@ -114,6 +120,12 @@ void HistoryWidget::onResendTransaction() {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(index);
     emit resendTransaction(tx.hash);
 }
@@ -123,6 +135,12 @@ void HistoryWidget::onRemoveFromHistory() {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(index);
 
     auto result = QMessageBox::question(this, "Remove transaction from history", "Are you sure you want to remove this transaction from the history?");
@@ -145,6 +163,12 @@ void HistoryWidget::showTxDetails() {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(index);
 
     auto *dialog = new TxInfoDialog(m_wallet, tx, this);
@@ -160,6 +184,12 @@ void HistoryWidget::onViewOnBlockExplorer() {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(index);
 
     emit viewOnBlockExplorer(tx.hash);
@@ -179,6 +209,12 @@ void HistoryWidget::createTxProof() {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(index);
 
     TxProofDialog dialog{this, m_wallet, tx};
@@ -191,6 +227,12 @@ void HistoryWidget::copy(copyField field) {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        return;
+    }
+
     const TransactionRow& tx = ui->history->sourceModel()->entryFromIndex(index);
 
     QString data = [field, tx]{

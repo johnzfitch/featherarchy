@@ -36,26 +36,36 @@ bool AddressBookModel::isShowFullAddresses() const {
 void AddressBookModel::setShowFullAddresses(bool show)
 {
     m_showFullAddresses = show;
-    emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+
+    // Avoid emitting invalid indices when model is empty
+    if (rowCount() > 0) {
+        emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+    }
 }
 
 bool AddressBookModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (index.isValid() && role == Qt::EditRole) {
-        const int row = index.row();
-
-        switch (index.column()) {
-            case Description:
-                m_addressBook->setDescription(row, value.toString());
-                break;
-            default:
-                return false;
-        }
-        emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
-
-        return true;
+    if (!index.isValid() || role != Qt::EditRole) {
+        return false;
     }
-    return false;
+
+    const int row = index.row();
+
+    // Bounds check before accessing address book data
+    if (row < 0 || row >= m_addressBook->count()) {
+        return false;
+    }
+
+    switch (index.column()) {
+        case Description:
+            m_addressBook->setDescription(row, value.toString());
+            break;
+        default:
+            return false;
+    }
+    emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
+
+    return true;
 }
 
 QVariant AddressBookModel::data(const QModelIndex &index, int role) const
@@ -135,6 +145,11 @@ QVariant AddressBookModel::headerData(int section, Qt::Orientation orientation, 
 
 bool AddressBookModel::deleteRow(int row)
 {
+    // Bounds check before delegating to AddressBook
+    if (row < 0 || row >= m_addressBook->count()) {
+        return false;
+    }
+
     return m_addressBook->deleteRow(row);
 }
 

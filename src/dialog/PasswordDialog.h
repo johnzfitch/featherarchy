@@ -22,6 +22,8 @@ public:
 
     QString password = "";
 
+    void secureWipePassword();
+
 private:
     QScopedPointer<Ui::PasswordDialog> ui;
 };

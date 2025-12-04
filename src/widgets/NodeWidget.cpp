@@ -116,13 +116,26 @@ void NodeWidget::onContextNodeCopy() {
 }
 
 FeatherNode NodeWidget::selectedNode() {
+    if (!m_activeView) {
+        qWarning() << "Cannot get selected node: m_activeView is null";
+        return FeatherNode();
+    }
+
     QModelIndex index = m_activeView->currentIndex();
     if (!index.isValid()) return FeatherNode();
 
     FeatherNode node;
     if (m_activeView == ui->treeView_custom) {
+        if (!m_customModel) {
+            qWarning() << "Cannot get selected node: m_customModel is null";
+            return FeatherNode();
+        }
         node = m_customModel->node(index.row());
     } else {
+        if (!m_wsModel) {
+            qWarning() << "Cannot get selected node: m_wsModel is null";
+            return FeatherNode();
+        }
         node = m_wsModel->node(index.row());
     }
     return node;
@@ -133,6 +146,12 @@ void NodeWidget::onContextCustomNodeRemove() {
     if (!index.isValid()) {
         return;
     }
+
+    if (!m_customModel) {
+        qWarning() << "Cannot remove node: m_customModel is null";
+        return;
+    }
+
     FeatherNode node = m_customModel->node(index.row());
 
     auto nodes = m_nodes->customNodes();
@@ -190,6 +209,10 @@ void NodeWidget::setCanConnect(bool canConnect) {
 
 void NodeWidget::setWSModel(NodeModel *model) {
     m_wsModel = model;
+    if (!m_wsModel) {
+        qWarning() << "setWSModel called with null model";
+        return;
+    }
     ui->treeView_websocket->setModel(m_wsModel);
     ui->treeView_websocket->header()->setSectionResizeMode(NodeModel::URL, QHeaderView::Stretch);
     ui->treeView_websocket->header()->setSectionResizeMode(NodeModel::Height, QHeaderView::ResizeToContents);
@@ -197,6 +220,10 @@ void NodeWidget::setWSModel(NodeModel *model) {
 
 void NodeWidget::setCustomModel(NodeModel *model) {
     m_customModel = model;
+    if (!m_customModel) {
+        qWarning() << "setCustomModel called with null model";
+        return;
+    }
     ui->treeView_custom->setModel(m_customModel);
     ui->treeView_custom->header()->setSectionResizeMode(NodeModel::URL, QHeaderView::Stretch);
 }

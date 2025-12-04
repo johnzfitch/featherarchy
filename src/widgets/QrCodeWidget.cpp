@@ -11,15 +11,22 @@ QrCodeWidget::QrCodeWidget(QWidget *parent) : QWidget(parent)
 {
 }
 
-void QrCodeWidget::setQrCode(QrCode *qrCode) {
-    if (m_qrcode) {
-        delete m_qrcode;
-    }
+QrCodeWidget::~QrCodeWidget()
+{
+    // Note: QrCodeWidget does NOT own m_qrcode - caller manages lifecycle via QScopedPointer
+    m_qrcode = nullptr;
+}
 
+void QrCodeWidget::setQrCode(QrCode *qrCode) {
+    // Note: QrCodeWidget does NOT take ownership - caller manages lifecycle
     m_qrcode = qrCode;
 
     int k = m_qrcode->width();
-    this->setMinimumSize(k*5, k*5);
+    if (k > 0) {
+        this->setMinimumSize(k*5, k*5);
+    } else {
+        qWarning() << "QR code has invalid width (zero)";
+    }
 
     this->update();
 }
@@ -39,6 +46,10 @@ void QrCodeWidget::paintEvent(QPaintEvent *event) {
 
     auto r = painter.viewport();
     int k = m_qrcode->width();
+    if (k == 0) {
+        qWarning() << "Division by zero avoided: QR code width is zero";
+        return;
+    }
     int margin = 10;
     int framesize = std::min(r.width(), r.height());
     int boxsize = int((framesize - (2*margin)) / k);

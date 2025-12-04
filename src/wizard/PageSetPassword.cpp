@@ -31,8 +31,14 @@ void PageSetPassword::initializePage() {
 
 bool PageSetPassword::validatePage() {
     m_fields->password = ui->widget_password->password();
+    ui->widget_password->secureWipe();  // Wipe password from widget memory
     emit createWallet();
     return true;
+}
+
+void PageSetPassword::cleanupPage() {
+    // Securely wipe password fields when navigating away
+    ui->widget_password->secureWipe();
 }
 
 int PageSetPassword::nextId() const {

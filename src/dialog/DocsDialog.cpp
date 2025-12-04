@@ -89,6 +89,12 @@ DocsDialog::DocsDialog(QWidget *parent)
         QString doc = url.toString();
 
         if (!doc.startsWith("qrc")) {
+            // Validate external URLs before opening
+            if (!url.isValid() || (url.scheme() != "http" && url.scheme() != "https")) {
+                qWarning() << "Invalid or unsafe URL rejected:" << doc;
+                this->showDoc(m_currentSource);
+                return;
+            }
             Utils::externalLinkWarning(this, doc);
             this->showDoc(m_currentSource);
             return;
@@ -182,6 +188,13 @@ void DocsDialog::showDoc(const QString &doc, const QString &highlight) {
 
     if (!resource.startsWith("qrc")) {
         resource = "qrc:/docs/" + doc + ".md";
+    }
+
+    // Validate resource path to prevent path traversal
+    if (!resource.startsWith("qrc:/docs/")) {
+        qWarning() << "Invalid resource path rejected:" << resource;
+        ui->textBrowser->setSource(m_currentSource);
+        return;
     }
 
     if (m_items.contains(resource)) {

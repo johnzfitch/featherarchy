@@ -212,6 +212,13 @@ void HistoryView::keyPressEvent(QKeyEvent *event) {
     if (!index.isValid()) {
         return;
     }
+
+    if (index.row() < 0 || index.row() >= m_model->rowCount()) {
+        qWarning() << "Transaction row out of bounds:" << index.row();
+        QTreeView::keyPressEvent(event);
+        return;
+    }
+
     const TransactionRow& tx = sourceModel()->entryFromIndex(index);
 
     if (event->matches(QKeySequence::Copy)) {

@@ -186,6 +186,13 @@ void SendWidget::sendClicked() {
         QVector<QString> addresses;
         QVector<quint64> amounts;
         for (auto &output : outputs) {
+            // Validate each address in multi-destination transaction
+            if (!WalletManager::addressValid(output.address, constants::networkType)) {
+                Utils::showError(this, "Invalid Address",
+                    QString("Invalid Monero address: %1").arg(output.address.left(20) + "..."),
+                    {}, "pay_to_many");
+                return;
+            }
             addresses.push_back(output.address);
             amounts.push_back(output.amount);
         }
