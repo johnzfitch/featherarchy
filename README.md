@@ -1,60 +1,76 @@
-# Feather Wallet
+# Featherarchy
 
-Feather is a free Monero desktop wallet for Linux, Tails, macOS and Windows. It is written in C++ with the Qt framework.
+**A security-hardened Monero wallet fork, optimized for Omarchy Linux.**
 
-- **easy-to-use**, **small** and **fast** - Feather runs well on any modern hardware, including virtual machines and live operating systems.
-- **beginner friendly**, but also caters to advanced Monero users by providing a [feature set](https://docs.featherwallet.org/guides/features) that is on par with the official CLI.
-- ships with **sane defaults** that suit most users, but can also be configured for high or uncommon threat models.
-- serves as a testing grounds for **experimental features** that may later be adopted in the reference wallets.
+Featherarchy is a privacy-focused fork of [Feather Wallet](https://featherwallet.org) with enhanced security measures, memory safety improvements, and the Omarchy dark theme.
 
-## Download
+## Security Enhancements
 
-You can download Feather from **[featherwallet.org](https://featherwallet.org/download/)** or **[GitHub](https://github.com/feather-wallet/feather/releases)**.
+This fork includes critical security and stability fixes not yet in upstream:
 
-If you need help installing Feather, check the [installation documentation](https://docs.featherwallet.org/).
+### Memory Safety
+- **QrCode memory leaks fixed** - PaymentRequestDialog and URWidget no longer leak memory on repeated QR generation
+- **Smart pointer migration** - Critical objects now use `QScopedPointer` for automatic cleanup
+- **Ownership semantics documented** - Clear non-owning pointer patterns prevent use-after-free
 
-We recommend that you verify downloads with GPG. Releases are signed with our [release signing key](https://docs.featherwallet.org/guides/release-signing-key). The fingerprint is:
+### Input Validation
+- **Address validation** - All user-input Monero addresses validated before use (ContactsDialog, OutputSweepDialog, SendWidget multi-destination)
+- **Path canonicalization** - Wallet paths sanitized to prevent directory traversal attacks
+- **Bounds checking** - Transaction fee calculations protected against unsigned integer underflow
 
+### Code Quality
+- **Dead code removed** - Legacy commented-out code blocks eliminated
+- **Secure password handling** - Password fields wiped from memory after use
+
+## Omarchy Theme
+
+Ships with the **Omarchy** dark theme - a clean, minimal aesthetic designed for extended use:
+
+- High contrast for readability
+- Reduced eye strain in low-light environments
+- Consistent with Omarchy Linux desktop theming
+
+## Building
+
+```bash
+# Clone with submodules
+git clone --recursive https://github.com/johnzfitch/featherarchy.git
+cd featherarchy
+
+# Build
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+
+# Binary location
+./bin/feather
 ```
-8185 E158 A333 30C7 FD61 BC0D 1F76 E155 CEFB A71C
+
+### Dependencies (Arch Linux)
+
+```bash
+sudo pacman -S base-devel cmake qt6-base qt6-svg qt6-websockets \
+    libgcrypt libsodium hidapi protobuf libusb boost
 ```
 
-Windows releases are code-signed for free by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+## Differences from Upstream Feather
 
-## Resources
+| Feature | Feather | Featherarchy |
+|---------|---------|--------------|
+| QrCode memory management | Raw pointers (leaks) | QScopedPointer |
+| Address validation | Partial | Complete |
+| Path traversal protection | Basic tilde expansion | Full canonicalization |
+| Fee calculation safety | No bounds checking | Underflow protected |
+| Theme | Light/Dark | + Omarchy |
+| Target distro | General | Omarchy Linux |
 
-* [Official Site](https://featherwallet.org)
-* [Documentation](https://docs.featherwallet.org)
-* [Git Repository](https://github.com/feather-wallet/feather)
-* [Matrix](https://matrix.to/#/#feather:monero.social)
-* IRC: `#feather` on [OFTC](https://www.oftc.net/)
-* Mail: dev@featherwallet.org
+## Upstream
 
-If you need help with your wallet, please contact us via Matrix or IRC.
-If you don't have an IRC client, you can join the room via [webchat](https://webchat.oftc.net/?randomnick=1&channels=feather).
-If you don’t receive a response immediately please idle in the room.
-
-## Release Builds
-
-To learn how to run a bootstrappable release build, see: [contrib/guix/README.md](https://github.com/feather-wallet/feather/blob/master/contrib/guix/README.md)
-
-For release attestations, see the [feather-sigs](http://github.com/feather-wallet/feather-sigs) repo.
-
-For release policy, see: [RELEASE.md](https://github.com/feather-wallet/feather/blob/master/RELEASE.md)
-
-## Development
-
-If you are looking to set up a development environment for Feather, see [HACKING.md](https://github.com/feather-wallet/feather/blob/master/HACKING.md).
-
-It is highly recommended that you join our Matrix or IRC channel if you are hacking on Feather.
-Idling in this channel is the best way to stay updated on best practices and new developments.
-
-For information on how Feather is maintained, see: [MAINTENANCE.md](https://github.com/feather-wallet/feather/blob/master/MAINTENANCE.md)
-
-To report a security vulnerability, see: [SECURITY.md](https://github.com/feather-wallet/feather/blob/master/SECURITY.md)
+This fork tracks [feather-wallet/feather](https://github.com/feather-wallet/feather). Security fixes will be proposed upstream via PR.
 
 ## License
 
-Feather is free and open-source software, [licensed under BSD-3](https://raw.githubusercontent.com/feather-wallet/feather/master/LICENSE).
+BSD-3-Clause - Same as upstream Feather.
 
 Copyright (c) 2020-2025, The Monero Project
+Fork modifications (c) 2025, johnzfitch
